@@ -1,14 +1,37 @@
-import utils
-from headers import (S_HEADER,R_HEADER,X_HEADER,
+from .headers import (S_HEADER,R_HEADER,X_HEADER,
                      BINARY_FILE_HEADER,TRACE_HEADER)
-from Geometry import *
-from utils import *
-from test_code import *
+from .utils import *
+from .paths_init import geom_PATH, segy_PATH
+
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
-import struct
-from struct import Struct
 # setattr(object, name, value)
+
+def T0_loadFix_SrcGeom(txt_file):
+    df=txt2df(txt_file)
+    df1=df.iloc[:,0:4]
+    df2=df.iloc[:,4:]
+    df1.append(df2,ignore_index=True)
+    headers = ['FLDR','EAS','NOR','ELEV'] # FLDR: source numbering
+    df1.columns = headers
+    return df1
+
+def T1_loadFix_RecGeom(txt_file):
+    df = txt2df(txt_file)
+    df1 = df.iloc[:, 0:4]
+    df2 = df.iloc[:, 4:]
+    df1.append(df2, ignore_index=True)
+    headers = ['REC', 'EAS', 'NOR', 'ELEV']
+    df1.columns = headers
+    return df1
+
+def T2_loadFix_Relation(txt_file):
+    df = txt2df(txt_file)
+    #TODO:Abklären ob df[9] ignoriert werden muss oder nicht
+    df = df.iloc[:, 0:8]
+    headers = ['FLDR','SP','SPxLat','SPxLin','RPal','RPbl','ChnG','NCh'] #SP : source identifier , RPal : rec begin group1 RPbl: rec begin group2
+    df.columns = headers
+    return df
 
 
 class ImportError(Exception):

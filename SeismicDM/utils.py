@@ -2,15 +2,46 @@ import os
 import numpy as np
 import pandas as pd
 import struct
-# from obspy.io.segy.util import clibsegy
-# from obspy.core.compatibility import from_buffer
+from .paths_init import geom_PATH, segy_PATH
 
-def get_file_in_folder(folder_path):
-    for file in os.listdir(folder_path):
+def load_geometry(geom_folder_path):
+    os.chdir(geom_PATH) #Todo: find better way as chdir in function
+    files= os.listdir(os.path.abspath(geom_folder_path))
+    geom_files = []
+    for file in files:
+        geom_files.append(file)
+    try:
+        return geom_files[0], geom_files[1], geom_files[2]
+    except:
+        print('Warning: {} is missing file(s)'.format(geom_folder_path))
+        pass
+
+
+def load_segy(segy_folder_path):
+    os.chdir(segy_PATH)
+    files = os.listdir(os.path.abspath(segy_folder_path))
+    for file in files:
         return file
     else:
-        print('Warning: {} is empty'.format(folder_path))
+        print('Warning: {} is empty'.format(segy_folder_path))
         return 0
+
+def unpack_ibm_4byte(f):
+    """
+    From: ibm2ieee(ibm)
+    https://stackoverflow.com/questions/7125890/python-unpack-ibm-32-bit-float-point
+
+    Converts an IBM floating point number into IEEE format.
+    :param: ibm - 32 bit unsigned integer: unpack('>L', f.read(4))
+    """
+    [int32] = struct.unpack(">L", f.read(4))
+    if int32 == 0:
+        return 0
+    else:
+        sign = int32 >> 31 & 0x01
+        exponent = int32 >> 24 & 0x7f
+        mantissa = (int32 & 0x00ffffff) / float(pow(2, 24))
+        return (1 - 2 * sign) * mantissa * pow(16, exponent - 64)
 
 def get_header(f,HEADER,endianness):
     dic = {}
@@ -70,43 +101,6 @@ def find(a,b):
 
 def flatten(l):
     return [item for sublist in l for item in sublist]
-
-def unpack_ibm_4byte(f):
-    """
-    From: ibm2ieee(ibm)
-    https://stackoverflow.com/questions/7125890/python-unpack-ibm-32-bit-float-point
-
-    Converts an IBM floating point number into IEEE format.
-    :param: ibm - 32 bit unsigned integer: unpack('>L', f.read(4))
-    """
-    [int32] = struct.unpack(">L", f.read(4))
-    if int32 == 0:
-        return 0
-    else:
-        sign = int32 >> 31 & 0x01
-        exponent = int32 >> 24 & 0x7f
-        mantissa = (int32 & 0x00ffffff) / float(pow(2, 24))
-        return (1 - 2 * sign) * mantissa * pow(16, exponent - 64)
-
-
-def unpack_ibm_notworking(f,size):
-    """
-    From Obspy:
-    https://docs.obspy.org/_modules/obspy/io/segy/unpack.html#unpack_4byte_ibm
-    """
-    data = np.fromstring(f.read(size), dtype=np.int32)
-    sign = np.bitwise_and(np.right_shift(data, 31), 0x01)
-    exponent = np.bitwise_and(np.right_shift(data, 24), 0x7f)
-    mantissa = np.bitwise_and(data, 0x00ffffff)
-    # Force single precision.
-    mantissa = np.require(mantissa, 'float32')
-    mantissa /= 0x1000000
-    sign *= -2.0
-    sign += 1.0
-    mantissa *= 16.0 ** (exponent - 64)
-    mantissa *= sign
-    return mantissa
-
 
 
 
