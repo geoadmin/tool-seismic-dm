@@ -7,9 +7,9 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
 def T0_loadFix_SrcGeom(txt_file):
-    df=txt2df(txt_file)
-    df1=df.iloc[:,0:4]
-    df2=df.iloc[:,4:]
+    df = txt2df(txt_file)
+    df1 = df.iloc[:, 0:4]
+    df2 = df.iloc[:, 4:]
     df1.append(df2,ignore_index=True)
     headers = ['FLDR','EAS','NOR','ELEV'] # FLDR: source numbering
     df1.columns = headers
@@ -26,7 +26,6 @@ def T1_loadFix_RecGeom(txt_file):
 
 def T2_loadFix_Relation(txt_file):
     df = txt2df(txt_file)
-    #TODO:Abklären ob df[9] ignoriert werden muss oder nicht
     df = df.iloc[:, 0:8]
     headers = ['FLDR','SP','SPxLat','SPxLin','RPal','RPbl','ChnG','NCh'] #SP : source identifier , RPal : rec begin group1 RPbl: rec begin group2
     df.columns = headers
@@ -79,12 +78,6 @@ class SPS(object):
     def BuildGeomDB(self, SrcGeom, RecGeom, RelGeom):
         """
         Create SPS structure from geometry inputs
-        :param segy:
-        :param srv:
-        :param SrcGeom:
-        :param RecGeom:
-        :param RelGeom:
-        :return:
         """
         print('Loading geometry ...')
 
@@ -182,15 +175,15 @@ class SPS(object):
         self.nsrc = len(RecGeom['REC'])
         self.nrec = len(RecGeom['REC'])
         self.nx = n_ffid
-#
-#         # Decimate SPS/S SPS/R to stations member in SPS/X
-#         # TODO:
-#         # k = unique([sps.X.ksrc]);
-#         # sps.S = sps.S(k);
-#         # sps.nsrc = numel(sps.S);
-#         # k = unique([sps.X.KREC]);
-#         # sps.R = sps.R(k);
-#         # sps.nrec = numel(sps.R);
+
+        # Decimate SPS/S SPS/R to stations member in SPS/X
+        # TODO: add
+        # k = unique([sps.X.ksrc]);
+        # sps.S = sps.S(k);
+        # sps.nsrc = numel(sps.S);
+        # k = unique([sps.X.KREC]);
+        # sps.R = sps.R(k);
+        # sps.nrec = numel(sps.R);
 
 
 class Fileheader(object):
@@ -254,9 +247,6 @@ class Seis(object):
         """
         Read textual file header (3200 bytes). Encoding in EBCDIC or ASCII.
         """
-        # TODO: fehlt loc shot, record, reel, trace sequence
-        # TODO: read all data after : to multiple space?
-        # TODO: conditions for encoding
         try:
             with open(self.file, encoding=self.header_encoding) as f:  # 'rb for utf8
                 # Textual file header

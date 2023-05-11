@@ -65,7 +65,8 @@ def return_ascii_header(file_header):
     return df_file_header
 
 def get_bytefactor_from_format(format_data_sample):
-    if format_data_sample == 1: bytefactor = 4  # '4-Byte IMB floating point' # TODO: verify https://en.wikipedia.org/wiki/IBM_hexadecimal_floating-point
+    # TODO: verify https://en.wikipedia.org/wiki/IBM_hexadecimal_floating-point
+    if format_data_sample == 1: bytefactor = 4  # '4-Byte IMB floating point'
     if format_data_sample == 2: bytefactor = 4       # 4-byte two complement integer
     if format_data_sample == 3: bytefactor = 2     # 2-byte two complement integer
     if format_data_sample == 4: bytefactor = 4
