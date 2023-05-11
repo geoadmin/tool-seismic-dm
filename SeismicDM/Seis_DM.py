@@ -5,7 +5,6 @@ from .paths_init import geom_PATH, segy_PATH
 
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
-# setattr(object, name, value)
 
 def T0_loadFix_SrcGeom(txt_file):
     df=txt2df(txt_file)
@@ -263,7 +262,6 @@ class Seis(object):
                 # Textual file header
                 file_sum = f.read(3200)
                 self.file_summary = file_sum
-                # self.textual_file_header = return_ascii_header(file_header)
         except:
             raise ImportError('File summary can not be read')
 
@@ -279,8 +277,6 @@ class Seis(object):
         except:
             raise ImportError('File header can not be read')
 
-                # binaryHeader_dataframe = utils.get_header(f,BINARY_FILE_HEADER,endianness)
-
     def _read_trace(self):
         """
         Fetch for each shot its header and data
@@ -290,23 +286,21 @@ class Seis(object):
         nsamples = self.fileheader.nsam
         bytef = get_bytefactor_from_format(self.fileheader.dform)
 
-        # try:
-        with open(self.file,'rb') as f:
-            f.seek(3600)  # jump to end of trace file header
-            for t in self.traces.trace:
-                [setattr(t.header, ls[1], int.from_bytes(f.read(ls[0]), byteorder=self.endianness))
-                 for ls in TRACE_HEADER]
-                # TODO : fix import byte / data.encode for ibm needed
-                t.data = [unpack_ibm_4byte(f) for j in range(t.header.nstr)]
-                # t.data = [int.from_bytes(f.read(bytef), byteorder=self.endianness) for j in range(nsamples)]
-        # except:
-        #     raise ImportError('Traces can not be read')
+        try:
+            with open(self.file,'rb') as f:
+                f.seek(3600)  # jump to end of trace file header
+                for t in self.traces.trace:
+                    [setattr(t.header, ls[1], int.from_bytes(f.read(ls[0]), byteorder=self.endianness))
+                     for ls in TRACE_HEADER]
+                    # TODO : verify import byte / data.encode for ibm needed
+                    t.data = [unpack_ibm_4byte(f) for j in range(t.header.nstr)]
+        except:
+            raise ImportError('Traces can not be read')
 
     def _read_trace_obspy(self):
         from obspy.io.segy.segy import _read_segy
         Obj = _read_segy(self.file)
         obj_traces = Obj.traces
-        # self.obspy_data = pd.DataFrame([ot.data for ot in obj_traces])
         self.obspy_data = obj_traces
 
 
@@ -316,6 +310,5 @@ class Seis(object):
         :return:
         """
         # TODO
-
         print('----')
 
