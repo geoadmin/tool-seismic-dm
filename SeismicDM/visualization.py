@@ -3,7 +3,7 @@ import matplotlib.colors as mcolors
 import numpy as np
 
 
-def plot_wavelets(SeisDB):
+def plotWavelets(SeisDB):
     for i in range(5):  # TODO: change when ready to plot all nffid
         fig, ax = plt.subplots()
         ntraces_i = SeisDB.traces.headers['ntr'][i]

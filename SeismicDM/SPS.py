@@ -1,9 +1,5 @@
-import pandas as pd
-from .user_inputs import temp_nffid
-from .headers import (S_HEADER, R_HEADER, X_HEADER,
-                      BINARY_FILE_HEADER, TRACE_HEADER)
+from .headers import (S_HEADER, R_HEADER, X_HEADER)
 from .utils import *
-import re
 from .paths_init import (SeismicDM_PATH,geom_PATH, segy_PATH)
 
 
@@ -34,10 +30,6 @@ def T2_loadFix_Relation(txt_file):
     # SP : source identifier , RPal : rec begin group1 RPbl: rec begin group2
     df.columns = headers
     return df
-
-
-class ImportError(Exception):
-    pass
 
 
 class S(object):
@@ -189,129 +181,4 @@ class SPS(object):
         # k = unique([sps.X.KREC]);
         # sps.R = sps.R(k);
         # sps.nrec = numel(sps.R);
-
-
-class Fileheader(object):
-    def __init__(self):
-        self.nsam = None
-        self.dform = None
-
-
-class Traceheader(object):
-    def __init__(self):
-        self.ntr = None
-
-
-class Data(object):
-    def __init__(self):
-        self.spare = None
-
-
-class Trace(object):
-    def __init__(self):
-        self.header = Traceheader()
-        self.data = Data()
-
-
-class Traces(object):
-    def __init__(self, nffid = 1):
-        # self.trace = [Trace() for n in range(nffid)]
-        self.headers = pd.DataFrame()
-        self.data = pd.DataFrame()
-
-
-class Seis(object):
-    def __init__(self, file=None, SPS=None, binary_header=None, trace_header=None, endianness='>'):
-
-        if SPS is None:
-            msg = """ No geometry to read""".strip()
-            raise ImportError(msg)
-        elif file is None:
-            msg = """ No file to read""".strip()
-            raise ImportError(msg)
-        else:
-            self.SPS = SPS
-            self.nffid = self.SPS.n_ffid
-            self.file = file
-            self.fileheader = Fileheader()
-            self._read_encod()
-            self._read_textual_header()
-            self._read_file_header()
-            self.traces = Traces(self.nffid)
-            self._read_trace()
-            # self._read_trace_obspy()
-            # self.plot_sample_time_data()
-
-    def _read_encod(self, header_encoding='cp500',endianness = 'big'):
-        """
-        Read encoding necessary for data extraction
-        """
-        self.endianness = endianness
-        self.header_encoding = header_encoding
-        self.trace_dtype = None
-
-    def _read_textual_header(self):
-        """
-        Read textual file header (3200 bytes). Encoding in EBCDIC or ASCII.
-        """
-        try:
-            with open(self.file, encoding=self.header_encoding) as f:  # 'rb for utf8
-                # Textual file header
-                dic={}
-                for n in range(int(3200/80)):
-                    key = f.read(3)
-                    value = f.read(77)
-                    dic[key] = value
-                self.textual_header = pd.DataFrame.from_dict([dic]).T
-        except:
-            raise ImportError('File summary can not be read')
-
-    def _read_file_header(self):
-        """
-        Read binary file header. (240 bytes after textual file header of 3200 bytes)
-        """
-        try:
-            with open(self.file, 'rb') as f:
-                f.seek(3200)  # jump to binary file header
-                [setattr(self.fileheader, ls[1], int.from_bytes(f.read(ls[0]), byteorder=self.endianness))
-                 for ls in BINARY_FILE_HEADER ]
-        except:
-            raise ImportError('File header can not be read')
-
-    def _read_trace(self):
-        """
-        Fetch for each shot its header and data
-        """
-        try:
-            with open(self.file,'rb') as f:
-                f.seek(3600)  # jump to end of trace file header
-                df_h = pd.DataFrame(columns=[ls[1] for ls in TRACE_HEADER])
-                df_d = pd.DataFrame(columns=[i for i in range(self.fileheader.nsam)])  # nvr columns = nsamples
-                # for n in range(self.nffid):
-                for n in range(temp_nffid): #TODO: change when ready to store entire DB
-                    for i in range(self.fileheader.ntr):
-                        df_h.loc[n] = [int.from_bytes(f.read(ls[0]), byteorder=self.endianness) for ls in TRACE_HEADER]
-                        df_d.loc[n*i] = np.array([unpack_ibm_4byte(f) for le in range(df_h['nstr'][n])])
-                self.traces.headers = df_h
-                self.traces.data = df_d.T  # invert dataframe to have row as traces
-
-                # for t in self.traces.trace:
-                #     [setattr(t.header, ls[1], int.from_bytes(f.read(ls[0]), byteorder=self.endianness))
-                #      for ls in TRACE_HEADER]
-                #     # TODO : verify import byte / data.encode for ibm needed
-                #     t.data = [unpack_ibm_4byte(f) for j in range(t.header.nstr)]
-        except:
-            raise ImportError('Traces can not be read')
-
-
-    def _save_SeisDB(self,name = 'tempDB'):
-        pd.to_pickle(self, SeismicDM_PATH+'/temp/' + name + '.pickle')
-
-    def navmergesps(self):
-        """
-        Assign a survey acquisition geometry provided by a SPS database to seismic shot records provided as a seismic data structure (s)
-        :return:
-        """
-        # TODO
-        print('----')
 

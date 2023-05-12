@@ -1,8 +1,9 @@
-from SeismicDM.Seis_DM import SPS, Seis
-from SeismicDM.paths_init import (SeismicDM_PATH,geom_PATH, segy_PATH)
+from SeismicDM.SPS import SPS
+from SeismicDM.SEGY import Seis
+from SeismicDM.paths_init import (SeismicDM_PATH, geom_PATH, segy_PATH)
 from SeismicDM.user_inputs import srv, existingDB
 from SeismicDM.utils import load_segy, load_geometry
-from SeismicDM.visualization import plot_wavelets
+from SeismicDM.visualization import plotWavelets
 import pandas as pd
 
 
@@ -18,12 +19,12 @@ def createDB():
 if __name__ == '__main__':
     if existingDB == 0:
         SeisDB = createDB()
-        SeisDB._save_SeisDB('SeisDB')
+        SeisDB._saveSeisDB('SeisDB')
     else:
         # Load DB if already exists
         SeisDB = pd.read_pickle(SeismicDM_PATH + '/temp/SeisDB_temp.pickle')
 
     # Test if download correct
-    plot_wavelets(SeisDB)
+    # plotWavelets(SeisDB)
 
 

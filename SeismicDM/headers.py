@@ -178,7 +178,7 @@ TRACE_HEADER = [
     [4, 'cdpy'],  # Y coordinate of ensemble (CDP) position of this trace
     [4, 'ninline'],  # In-line number for 3D
     [4, 'ncrline'],  # Cross-line number for 3D
-    [4, 'spoint'],  # Shotpoint number #Todo: verify
+    [4, 'spoint'],  # Shotpoint number
     [2, 'spsc'],  # Scalar to be applied to shotpoint number
     [2, 'trunit'],  # Trace value measurement unit
     [6, 'transc'],  # Transduction constant
