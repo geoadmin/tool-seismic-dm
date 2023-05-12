@@ -1,19 +1,21 @@
-from .headers import (S_HEADER,R_HEADER,X_HEADER,
-                     BINARY_FILE_HEADER,TRACE_HEADER)
+import pandas as pd
+from .user_inputs import temp_nffid
+from .headers import (S_HEADER, R_HEADER, X_HEADER,
+                      BINARY_FILE_HEADER, TRACE_HEADER)
 from .utils import *
-from .paths_init import geom_PATH, segy_PATH
+import re
+from .paths_init import (SeismicDM_PATH,geom_PATH, segy_PATH)
 
-import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
 
 def T0_loadFix_SrcGeom(txt_file):
     df = txt2df(txt_file)
     df1 = df.iloc[:, 0:4]
     df2 = df.iloc[:, 4:]
     df1.append(df2,ignore_index=True)
-    headers = ['FLDR','EAS','NOR','ELEV'] # FLDR: source numbering
+    headers = ['FLDR', 'EAS', 'NOR', 'ELEV']  # FLDR: source numbering
     df1.columns = headers
     return df1
+
 
 def T1_loadFix_RecGeom(txt_file):
     df = txt2df(txt_file)
@@ -24,10 +26,12 @@ def T1_loadFix_RecGeom(txt_file):
     df1.columns = headers
     return df1
 
+
 def T2_loadFix_Relation(txt_file):
     df = txt2df(txt_file)
     df = df.iloc[:, 0:8]
-    headers = ['FLDR','SP','SPxLat','SPxLin','RPal','RPbl','ChnG','NCh'] #SP : source identifier , RPal : rec begin group1 RPbl: rec begin group2
+    headers = ['FLDR', 'SP', 'SPxLat', 'SPxLin', 'RPal', 'RPbl', 'ChnG', 'NCh']
+    # SP : source identifier , RPal : rec begin group1 RPbl: rec begin group2
     df.columns = headers
     return df
 
@@ -68,7 +72,7 @@ class SPS(object):
         else:
             self._load_geom(srctxt, rectxt, reltxt)
 
-    def _load_geom(self,srctxt=None, rectxt=None, reltxt=None):
+    def _load_geom(self, srctxt=None, rectxt=None, reltxt=None):
         SrcGeom = T0_loadFix_SrcGeom(srctxt)
         RecGeom = T1_loadFix_RecGeom(rectxt)
         RelGeom = T2_loadFix_Relation(reltxt)
@@ -145,9 +149,10 @@ class SPS(object):
         self.X.krec = [[None for x in range(n_chan[i])] for i in range(n_ffid)]
         for i in range(n_ffid):
             krec_i = [i_R for x_r in self.X.rpoint[i] for i_R, x_R in enumerate(self.R.point) if x_r == x_R]
-            if not hasattr(krec_i, "__len__"): print('debug')
+            if not hasattr(krec_i, "__len__"):
+                print('debug')
             for j in range(len(krec_i)):
-                if (self.X.rpoint[i][j] < min(self.R.point) or self.X.rpoint[i][j] > max(self.R.point)):
+                if self.X.rpoint[i][j] < min(self.R.point) or self.X.rpoint[i][j] > max(self.R.point):
                     self.X.krec[i][j] = 0
                 else:
                     self.X.krec[i][j] = krec_i[j]
@@ -188,12 +193,13 @@ class SPS(object):
 
 class Fileheader(object):
     def __init__(self):
-        self.spare = None
+        self.nsam = None
+        self.dform = None
 
 
 class Traceheader(object):
     def __init__(self):
-        self.spare = None
+        self.ntr = None
 
 
 class Data(object):
@@ -208,8 +214,10 @@ class Trace(object):
 
 
 class Traces(object):
-    def __init__(self,nffid=1):
-        self.trace = [Trace() for n in range(nffid)]
+    def __init__(self, nffid = 1):
+        # self.trace = [Trace() for n in range(nffid)]
+        self.headers = pd.DataFrame()
+        self.data = pd.DataFrame()
 
 
 class Seis(object):
@@ -227,13 +235,12 @@ class Seis(object):
             self.file = file
             self.fileheader = Fileheader()
             self._read_encod()
-            self._read_file_summary()
+            self._read_textual_header()
             self._read_file_header()
             self.traces = Traces(self.nffid)
             self._read_trace()
             # self._read_trace_obspy()
             # self.plot_sample_time_data()
-
 
     def _read_encod(self, header_encoding='cp500',endianness = 'big'):
         """
@@ -243,15 +250,19 @@ class Seis(object):
         self.header_encoding = header_encoding
         self.trace_dtype = None
 
-    def _read_file_summary(self):
+    def _read_textual_header(self):
         """
         Read textual file header (3200 bytes). Encoding in EBCDIC or ASCII.
         """
         try:
             with open(self.file, encoding=self.header_encoding) as f:  # 'rb for utf8
                 # Textual file header
-                file_sum = f.read(3200)
-                self.file_summary = file_sum
+                dic={}
+                for n in range(int(3200/80)):
+                    key = f.read(3)
+                    value = f.read(77)
+                    dic[key] = value
+                self.textual_header = pd.DataFrame.from_dict([dic]).T
         except:
             raise ImportError('File summary can not be read')
 
@@ -260,9 +271,9 @@ class Seis(object):
         Read binary file header. (240 bytes after textual file header of 3200 bytes)
         """
         try:
-            with open(self.file,'rb') as f:
-                f.seek(3200) # jump to binary file header
-                [setattr(self.fileheader,ls[1],int.from_bytes(f.read(ls[0]), byteorder=self.endianness))
+            with open(self.file, 'rb') as f:
+                f.seek(3200)  # jump to binary file header
+                [setattr(self.fileheader, ls[1], int.from_bytes(f.read(ls[0]), byteorder=self.endianness))
                  for ls in BINARY_FILE_HEADER ]
         except:
             raise ImportError('File header can not be read')
@@ -271,28 +282,30 @@ class Seis(object):
         """
         Fetch for each shot its header and data
         """
-        # Get main information from segy:
-        ntraces = self.fileheader.ntr
-        nsamples = self.fileheader.nsam
-        bytef = get_bytefactor_from_format(self.fileheader.dform)
-
         try:
             with open(self.file,'rb') as f:
                 f.seek(3600)  # jump to end of trace file header
-                for t in self.traces.trace:
-                    [setattr(t.header, ls[1], int.from_bytes(f.read(ls[0]), byteorder=self.endianness))
-                     for ls in TRACE_HEADER]
-                    # TODO : verify import byte / data.encode for ibm needed
-                    t.data = [unpack_ibm_4byte(f) for j in range(t.header.nstr)]
+                df_h = pd.DataFrame(columns=[ls[1] for ls in TRACE_HEADER])
+                df_d = pd.DataFrame(columns=[i for i in range(self.fileheader.nsam)])  # nvr columns = nsamples
+                # for n in range(self.nffid):
+                for n in range(temp_nffid): #TODO: change when ready to store entire DB
+                    for i in range(self.fileheader.ntr):
+                        df_h.loc[n] = [int.from_bytes(f.read(ls[0]), byteorder=self.endianness) for ls in TRACE_HEADER]
+                        df_d.loc[n*i] = np.array([unpack_ibm_4byte(f) for le in range(df_h['nstr'][n])])
+                self.traces.headers = df_h
+                self.traces.data = df_d.T  # invert dataframe to have row as traces
+
+                # for t in self.traces.trace:
+                #     [setattr(t.header, ls[1], int.from_bytes(f.read(ls[0]), byteorder=self.endianness))
+                #      for ls in TRACE_HEADER]
+                #     # TODO : verify import byte / data.encode for ibm needed
+                #     t.data = [unpack_ibm_4byte(f) for j in range(t.header.nstr)]
         except:
             raise ImportError('Traces can not be read')
 
-    def _read_trace_obspy(self):
-        from obspy.io.segy.segy import _read_segy
-        Obj = _read_segy(self.file)
-        obj_traces = Obj.traces
-        self.obspy_data = obj_traces
 
+    def _save_SeisDB(self,name = 'tempDB'):
+        pd.to_pickle(self, SeismicDM_PATH+'/temp/' + name + '.pickle')
 
     def navmergesps(self):
         """
