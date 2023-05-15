@@ -1,5 +1,6 @@
 from .loadSegy import *
-from .paths_init import (SeismicDM_PATH)
+from .pathsInit import (SeismicDM_PATH)
+from .snavmergesps import *
 
 
 class ImportError(Exception):
@@ -45,13 +46,11 @@ class Seis(object):
 
 
     def _saveSeisDB(self,name = 'tempDB'):
-        pd.to_pickle(self, SeismicDM_PATH+'/temp/' + name + '.pickle')
+        pd.to_pickle(self, SeismicDM_PATH+'/temp/' + name + '.pkl')
 
-    def navmergesps(self):
-        """
-        Assign a survey acquisition geometry provided by a SPS database to seismic shot records provided as a seismic data structure (s)
-        :return:
-        """
-        # TODO
-        print('----')
+
+    def _navmergesps(self):
+        snavmergesps(self)
+
+
 

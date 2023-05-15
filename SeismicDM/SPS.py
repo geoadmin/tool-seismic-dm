@@ -1,6 +1,7 @@
 from .headers import (S_HEADER, R_HEADER, X_HEADER)
 from .utils import *
-from .paths_init import (SeismicDM_PATH,geom_PATH, segy_PATH)
+from .userInputs import temp_nffid
+from .pathsInit import (SeismicDM_PATH, geom_PATH, segy_PATH)
 
 
 def T0_loadFix_SrcGeom(txt_file):
@@ -80,38 +81,44 @@ class SPS(object):
         # Import source station records
         self.S.line = self.srv
         self.S.code = 'V1'
-        self.S.spare1 = SrcGeom['FLDR']  # numbering source shots
-        self.S.easting = SrcGeom['EAS']
-        self.S.northing = SrcGeom['NOR']
+        self.S.spare1 = np.asarray(SrcGeom['FLDR'])
+        self.S.easting = np.asarray(SrcGeom['EAS'])
+        self.S.northing = np.asarray(SrcGeom['NOR'])
 
         # Import receiver station records
         self.R.line = self.srv
-        self.R.point = RecGeom['REC']
+        self.R.point = np.asarray(RecGeom['REC'])
         self.R.index = 1
-        self.R.easting = RecGeom['EAS']
-        self.R.northing = RecGeom['NOR']
-        self.R.elevation = RecGeom['ELEV']
+        self.R.easting = np.asarray(RecGeom['EAS'])
+        self.R.northing = np.asarray(RecGeom['NOR'])
+        self.R.elevation = np.asarray(RecGeom['ELEV'])
 
         # Import relation records (only those yet reviewd)
-        n_ffid = len(RelGeom['FLDR'])  # nbr total combinations source-receiver
-        n_chan = RelGeom['NCh'].values  # nbr channel pro ffid
-        n_rec = len(RelGeom['NCh'].values)  # nbr total recordings
-        ok = np.arange(40)
+        ok = np.arange(temp_nffid)  #Todo remove when all data
+        j = ok
 
-        self.X.ffid = RelGeom['FLDR']
-        self.X.sline = self.srv
-        self.X.spoint = RelGeom['SP']  # Point identifier
-        self.X.time = ok
-
-        ksrc = find(self.S.spare1, self.X.ffid)  # ksrc= Index des SPS-S Datensatz zum SPS-X Datensatz.
+        # ksrc = find(self.S.spare1, np.asarray(SrcGeom['FLDR']))  # ksrc= Index des SPS-S Datensatz zum SPS-X Datensatz.
+        #  TODO : make better function for this
+        ksrc = [0 for i in range(len(SrcGeom['FLDR']))]
+        for i in range(len(SrcGeom['FLDR'])):
+            ksrc[i] = [i_R for x_r in self.S.spare1 for i_R, x_R in enumerate(SrcGeom['FLDR']) if x_r == x_R]
 
         self.X.ksrc = ksrc
         if not hasattr(ksrc, "__len__"): print('debug')
 
+        self.X.ffid = np.asarray(RelGeom['FLDR'])
+        self.X.sline = self.srv
+        self.X.spoint = np.asarray(RelGeom['SP'])  # Point identifier
+        self.X.time = j
+
+        n_ffid = len(RelGeom['FLDR'])  # nbr total combinations source-receiver #TODO: oder n_fldr?? check
+        n_chan = np.asarray(RelGeom['NCh'])  # nbr channel pro ffid
+        n_rec = len(RelGeom['NCh'].values)  # nbr total recordings
+
         # source index
-        unique, counts = np.unique(self.X.spoint.values, return_counts=True)  # ID shots and counts / ffid
+        unique, counts = np.unique(self.X.spoint, return_counts=True)  # ID shots and counts / ffid
         shots_dic = dict(zip(unique, counts))  # shot ID : nbr count/ID
-        self.X.sindex = counts  # nbr repetition / shots ID : for every ffid get number shot repeted
+        self.X.sindex = counts  # nbr repetition / shots ID : for every ffid get number shot repeated
 
         # copy source related information to source rec
         self.S.ts = np.arange(len(self.X.time))
@@ -119,12 +126,16 @@ class SPS(object):
         self.S.point = unique
 
         # TODO add
+        self.S.ts = j
+        # for idx in ksrc:
+        #     self.S.index.value[idx] = self.X.sindex
+        # ------------------------------------------------
         # S(ksrc).ts = j;
         # S(ksrc).index = X(i).sindex;
         # S(ksrc).point = X(i).spoint;
 
         # channel and receiver related information
-        self.X.nChan = RelGeom['NCh']
+        self.X.nChan = np.asarray(RelGeom['NCh'])
         self.X.CHAN = [np.arange(RelGeom['NCh'].values[i]) for i in range(n_rec)]  # from 0 to nCh-1
         self.X.rline = [np.ones((1, RelGeom['NCh'].values[i])) * self.srv for i in range(n_rec)]
         self.X.rpoint = [

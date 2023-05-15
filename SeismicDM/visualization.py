@@ -4,7 +4,7 @@ import numpy as np
 
 
 def plotWavelets(SeisDB):
-    for i in range(5):  # TODO: change when ready to plot all nffid
+    for i in range(3):  # TODO: change when ready to plot all nffid
         fig, ax = plt.subplots()
         ntraces_i = SeisDB.traces.headers['ntr'][i]
         for nt in range(ntraces_i):

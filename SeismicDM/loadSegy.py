@@ -1,5 +1,6 @@
+import numpy as np
 import pandas as pd
-from .user_inputs import temp_nffid
+from .userInputs import temp_nffid
 from .headers import (BINARY_FILE_HEADER, TRACE_HEADER)
 from .utils import *
 
@@ -44,7 +45,8 @@ def loadSegy(Object):
             # for n in range(self.nffid):
             for n in range(temp_nffid):  # TODO: change when ready to store entire DB
                 for i in range(Object.fileheader.ntr):
-                    df_h.loc[n] = [int.from_bytes(f.read(ls[0]), byteorder=Object.endianness) for ls in TRACE_HEADER]
+                    df_h.loc[n] = np.asarray([int.from_bytes(f.read(ls[0]), byteorder=Object.endianness)
+                                            for ls in TRACE_HEADER])
                     df_d.loc[n * i] = np.array([unpack_ibm_4byte(f) for le in range(df_h['nstr'][n])])
             Object.traces.headers = df_h
             Object.traces.data = df_d.T  # invert dataframe to have row as traces

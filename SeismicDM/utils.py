@@ -3,8 +3,8 @@ import re
 import numpy as np
 import pandas as pd
 import struct
-from .paths_init import (SeismicDM_PATH,geom_PATH, segy_PATH)
-from .user_inputs import srv
+from .pathsInit import (SeismicDM_PATH, geom_PATH, segy_PATH)
+from .userInputs import srv
 
 
 
@@ -102,11 +102,18 @@ def get_index(serie1, serie2):
     return idx
 
 
-def find(a, b):
+def find_series(a, b):
     """
-    Get index where common elements between two series are found
+    Get index where elements from serie a are found in serie b
     """
     k = [i_a for i_b, x_b in enumerate(b) for i_a, x_a in enumerate(a) if x_a == x_b]
+    return k
+
+def find(a,b):
+    """
+    Get index where elements from serie a are found in serie b
+    """
+    k = [i_b for i_b, x_b in enumerate(b) if x_b in a]
     return k
 
 
