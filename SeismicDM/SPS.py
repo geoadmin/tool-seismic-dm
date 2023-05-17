@@ -1,3 +1,6 @@
+import numpy as np
+import pandas as pd
+
 from .headers import (S_HEADER, R_HEADER, X_HEADER)
 from .utils import *
 from .userInputs import temp_nffid
@@ -33,44 +36,47 @@ def T2_loadFix_Relation(txt_file):
     return df
 
 
-class S(object):
+class Si(object):
     def __init__(self):
         for sh in S_HEADER:
             setattr(self, sh, None)
 
-
-class R(object):
+class Ri(object):
     def __init__(self):
         for rh in R_HEADER:
             setattr(self, rh, None)
 
 
-class X(object):
+class Xi(object):
     def __init__(self):
         for xh in X_HEADER:
-            setattr(self, xh, None)
+            setattr(self, xh, [])
 
 
 class SPS(object):
     def __init__(self, srctxt=None, rectxt=None, reltxt=None, srv=None):
         self.srv = srv
-        self.S = S()
-        self.R = R()
-        self.X = X()
+
 
         # load geometry if txt file found
         if None in [srctxt, rectxt, reltxt]:
             msg = """ One or more txt file missing"""
             raise FileNotFoundError(msg)
         else:
-            self._load_geom(srctxt, rectxt, reltxt)
+            sg, rg, xg = self._load_geom(srctxt, rectxt, reltxt)
+            self.S = [Si() for i in range(self.n_fldr)]
+            self.R = [Ri() for i in range(self.n_fldr)]
+            self.X = [Xi() for i in range(self.n_fldr)]
+            self.BuildGeomDB(sg, rg, xg)
 
     def _load_geom(self, srctxt=None, rectxt=None, reltxt=None):
         SrcGeom = T0_loadFix_SrcGeom(srctxt)
         RecGeom = T1_loadFix_RecGeom(rectxt)
         RelGeom = T2_loadFix_Relation(reltxt)
+        self.n_fldr = len(SrcGeom['FLDR'])
+        return SrcGeom, RecGeom, RelGeom
 
-        self.BuildGeomDB(SrcGeom, RecGeom, RelGeom)
+
 
     def BuildGeomDB(self, SrcGeom, RecGeom, RelGeom):
         """
@@ -78,118 +84,102 @@ class SPS(object):
         """
         print('Loading geometry ...')
 
-        # Import source station records
-        self.S.line = self.srv
-        self.S.code = 'V1'
-        self.S.spare1 = np.asarray(SrcGeom['FLDR'])
-        self.S.easting = np.asarray(SrcGeom['EAS'])
-        self.S.northing = np.asarray(SrcGeom['NOR'])
-
-        # Import receiver station records
-        self.R.line = self.srv
-        self.R.point = np.asarray(RecGeom['REC'])
-        self.R.index = 1
-        self.R.easting = np.asarray(RecGeom['EAS'])
-        self.R.northing = np.asarray(RecGeom['NOR'])
-        self.R.elevation = np.asarray(RecGeom['ELEV'])
-
-        # Import relation records (only those yet reviewd)
         ok = np.arange(temp_nffid)  #Todo remove when all data
-        j = ok
 
-        # ksrc = find(self.S.spare1, np.asarray(SrcGeom['FLDR']))  # ksrc= Index des SPS-S Datensatz zum SPS-X Datensatz.
-        #  TODO : make better function for this
-        ksrc = [0 for i in range(len(SrcGeom['FLDR']))]
-        for i in range(len(SrcGeom['FLDR'])):
-            ksrc[i] = [i_R for x_r in self.S.spare1 for i_R, x_R in enumerate(SrcGeom['FLDR']) if x_r == x_R]
+        # import relation records
+        for i in range(len(ok)):
+            j = ok[i]
 
-        self.X.ksrc = ksrc
-        if not hasattr(ksrc, "__len__"): print('debug')
+            # Import source station records
+            self.S[i].line = self.srv
+            self.S[i].code = 'V1'
+            self.S[i].spare1 = SrcGeom['FLDR'][j]
+            self.S[i].easting = SrcGeom['EAS'][j]
+            self.S[i].northing = SrcGeom['NOR'][j]
 
-        self.X.ffid = np.asarray(RelGeom['FLDR'])
-        self.X.sline = self.srv
-        self.X.spoint = np.asarray(RelGeom['SP'])  # Point identifier
-        self.X.time = j
+            # Import receiver station records
+            self.R[i].line = self.srv
+            self.R[i].point = RecGeom['REC'][j]
+            self.R[i].index = 1
+            self.R[i].easting = RecGeom['EAS'][j]
+            self.R[i].northing = RecGeom['NOR'][j]
+            self.R[i].elevation = RecGeom['ELEV'][j]
 
-        n_ffid = len(RelGeom['FLDR'])  # nbr total combinations source-receiver #TODO: oder n_fldr?? check
-        n_chan = np.asarray(RelGeom['NCh'])  # nbr channel pro ffid
-        n_rec = len(RelGeom['NCh'].values)  # nbr total recordings
+        for i in range(len(ok)):
+            j = ok[i]
 
-        # source index
-        unique, counts = np.unique(self.X.spoint, return_counts=True)  # ID shots and counts / ffid
-        shots_dic = dict(zip(unique, counts))  # shot ID : nbr count/ID
-        self.X.sindex = counts  # nbr repetition / shots ID : for every ffid get number shot repeated
+            spare1 = [self.S[n].spare1 for n in range(len(ok))]
+            ksrc = findx(SrcGeom['FLDR'][j], spare1)  # ksrc= Index des SPS-S Datensatz zum SPS-X Datensatz.
+            ksrc  =ksrc[0] if len(ksrc)==1 else print('ksrc not a scalar')
 
-        # copy source related information to source rec
-        self.S.ts = np.arange(len(self.X.time))
-        self.S.index = counts
-        self.S.point = unique
+            self.X[i].ffid =RelGeom['FLDR'][j]
+            self.X[i].sline = self.srv
+            self.X[i].spoint = RelGeom['SP'][j]  # Point identifier
+            self.X[i].ksrc = ksrc
+            self.X[i].time = j
 
-        # TODO add
-        self.S.ts = j
-        # for idx in ksrc:
-        #     self.S.index.value[idx] = self.X.sindex
-        # ------------------------------------------------
-        # S(ksrc).ts = j;
-        # S(ksrc).index = X(i).sindex;
-        # S(ksrc).point = X(i).spoint;
+            # Source index
+            spoint = RelGeom['SP']
+            self.X[i].sindex = len(findx(self.X[i].spoint, spoint))
 
-        # channel and receiver related information
-        self.X.nChan = np.asarray(RelGeom['NCh'])
-        self.X.CHAN = [np.arange(RelGeom['NCh'].values[i]) for i in range(n_rec)]  # from 0 to nCh-1
-        self.X.rline = [np.ones((1, RelGeom['NCh'].values[i])) * self.srv for i in range(n_rec)]
-        self.X.rpoint = [
-            np.vstack((RelGeom['RPal'].values[i] + np.arange(60), RelGeom['RPbl'].values[i] + np.arange(60))).flatten()
-            for i in range(n_rec)]
-        self.X.rindex = [np.ones((1, RelGeom['NCh'].values[i])) for i in range(n_rec)]  # all ones
+            # # copy source related information to source rec
+            self.S[ksrc].ts = self.X[i].time
+            self.S[ksrc].index = self.X[i].sindex
+            self.S[ksrc].point = self.X[i].spoint
+        #
+        # n_rec = len(RelGeom['NCh'].values)  # nbr total recordings
+        # n_chan = np.asarray(RelGeom['NCh'])  # nbr channel pro ffid
+        #
+            # channel and receiver related information
+            self.X[i].nChan = RelGeom['NCh'][j]
+            self.X[i].CHAN = np.arange(0,RelGeom['NCh'][j])
+            self.X[i].rline = np.ones((1, RelGeom['NCh'][j])) * self.srv
 
-        # aux information (dummy)
-        self.X.instr = [np.ones((1, RelGeom['NCh'].values[i])) for i in range(n_rec)]
-        self.X.spar1 = [np.zeros((1, RelGeom['NCh'].values[i])) for i in range(n_rec)]
-        self.X.spar2 = [np.zeros((1, RelGeom['NCh'].values[i])) for i in range(n_rec)]
+            # TODO : verify X.rpoint struct
+            self.X[i].rpoint = np.asarray([RelGeom['RPal'][j] + np.linspace(0,59,60),
+                                         RelGeom['RPbl'][j] + np.linspace(0,59,60)]).flatten()
+            self.X[i].rindex = np.ones((1, RelGeom['NCh'][j]))  # all one assuming receivers do not move
 
-        # find receiver indices
-        self.X.krec = [[None for x in range(n_chan[i])] for i in range(n_ffid)]
-        for i in range(n_ffid):
-            krec_i = [i_R for x_r in self.X.rpoint[i] for i_R, x_R in enumerate(self.R.point) if x_r == x_R]
-            if not hasattr(krec_i, "__len__"):
-                print('debug')
-            for j in range(len(krec_i)):
-                if self.X.rpoint[i][j] < min(self.R.point) or self.X.rpoint[i][j] > max(self.R.point):
-                    self.X.krec[i][j] = 0
+            # aux information (dummy)
+            self.X[i].instr = np.ones((1, RelGeom['NCh'][j]))
+            self.X[i].spar1 = np.zeros((1, RelGeom['NCh'][j]))
+            self.X[i].spar2 = np.zeros((1, RelGeom['NCh'][j]))
+
+            # find receiver indices
+            self.X[i].krec = np.zeros(self.X[i].nChan)
+            for jr in range(int(self.X[i].nChan)):
+                if self.X[i].rpoint[jr] < np.min(RecGeom['REC']) or self.X[i].rpoint[jr] > np.max(RecGeom['REC']):
+                    self.X[i].krec[jr] = None
                 else:
-                    self.X.krec[i][j] = krec_i[j]
+                    krec = findx(self.X[i].rpoint[jr], RecGeom['REC'].values)
+                    krec = krec[0] if len(krec) == 1 else None
+                    self.X[i].krec[jr] = krec
 
-        # drop void receiver stations
-        k0 = []
-        k0 = [np.append(k0, (i, j)) for i in range(n_ffid) for j in range(n_chan[i]) if self.X.krec[i][j] == 0]
+            # drop void receiver stations
+            k0 = np.where(np.isnan(self.X[i].krec))
 
-        for e in k0:
-            i, j = int(e[0]), int(e[1])
-            self.X.CHAN[i] = np.delete(self.X.CHAN[i], j)
-            self.X.rline[i] = np.delete(self.X.rline[i], j)
-            self.X.rpoint[i] = np.delete(self.X.rpoint[i], j)
-            self.X.rindex[i] = np.delete(self.X.rindex[i], j)
-            self.X.instr[i] = np.delete(self.X.instr[i], j)
-            self.X.krec[i] = np.delete(self.X.krec[i], j)
-            self.X.spar1[i] = np.delete(self.X.spar1[i], j)
-            self.X.spar2[i] = np.delete(self.X.spar2[i], j)
+            self.X[i].CHAN = np.delete(self.X[i].CHAN, k0)
+            self.X[i].rline = np.delete(self.X[i].rline, k0)
+            self.X[i].rpoint = np.delete(self.X[i].rpoint, k0)
+            self.X[i].rindex = np.delete(self.X[i].rindex, k0)
+            self.X[i].instr = np.delete(self.X[i].instr, k0)
+            self.X[i].krec = np.delete(self.X[i].krec, k0)
+            self.X[i].spar1 = np.delete(self.X[i].spar1, k0)
+            self.X[i].spar2 = np.delete(self.X[i].spar2, k0)
 
-        # New n channel after drop
-        self.X.nChan = [len(self.X.CHAN[i]) for i in range(n_ffid)]
+            # New n channel after drop
+            self.X[i].nChan = len(self.X[i].CHAN)
 
         # Build SPS
-        self.n_ffid = n_ffid
-        self.nsrc = len(RecGeom['REC'])
-        self.nrec = len(RecGeom['REC'])
-        self.nx = n_ffid
-
         # Decimate SPS/S SPS/R to stations member in SPS/X
         # TODO: add
-        # k = unique([sps.X.ksrc]);
-        # sps.S = sps.S(k);
-        # sps.nsrc = numel(sps.S);
-        # k = unique([sps.X.KREC]);
-        # sps.R = sps.R(k);
-        # sps.nrec = numel(sps.R);
+        ksrc = [self.X[i].ksrc for i in range(len(ok))]
+        k = np.unique(ksrc)
 
+        self.S = [ self.S[ki] for ki in k]
+        self.R = [ self.R[ki] for ki in k]
+        self.X = [ self.X[ki] for ki in k]
+
+        self.nsrc = len(self.S)
+        self.nrec = len(self.R)
+        self.nx = len(self.X)

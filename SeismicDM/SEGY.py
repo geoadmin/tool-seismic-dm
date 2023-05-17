@@ -35,7 +35,7 @@ class Seis(object):
             raise ImportError(msg)
         else:
             self.SPS = SPS
-            self.nffid = self.SPS.n_ffid
+            self.nffid = self.SPS.n_fldr
             self.file = file
             self.fileheader = Fileheader()
             self.traces = Traces()

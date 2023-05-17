@@ -102,18 +102,20 @@ def get_index(serie1, serie2):
     return idx
 
 
-def find_series(a, b):
+def findx(x_a, b):
     """
-    Get index where elements from serie a are found in serie b
+    Get index where element x_a is found in serie b
     """
-    k = [i_a for i_b, x_b in enumerate(b) for i_a, x_a in enumerate(a) if x_a == x_b]
+    k = [i_b for i_b, x_b in enumerate(b) if x_b == x_a]
     return k
 
 def find(a,b):
     """
     Get index where elements from serie a are found in serie b
     """
-    k = [i_b for i_b, x_b in enumerate(b) if x_b in a]
+    # k = [i_b for x_a in a for i_b, x_b in enumerate(b) if x_b == x_a]
+    a, b = list(a), list(b)
+    k = np.asarray([ b.index(xa) for xa in a])
     return k
 
 

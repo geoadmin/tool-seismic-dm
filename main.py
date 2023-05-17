@@ -6,6 +6,7 @@ from SeismicDM.utils import load_segy, load_geometry
 from SeismicDM.visualization import plotWavelets
 import pandas as pd
 import os
+from SeismicDM.test import *
 
 
 def createDB():
@@ -18,6 +19,9 @@ def createDB():
 
 
 if __name__ == '__main__':
+
+    # run_test()
+
     if existingDB == 0:
         SeisDB = createDB()
         SeisDB._saveSeisDB('SeisDB')
