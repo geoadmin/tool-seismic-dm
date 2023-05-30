@@ -39,6 +39,7 @@ class Seis(object):
             self.file = file
             self.fileheader = Fileheader()
             self.traces = Traces()
+            # self.TRH = pd.DataFrame()
             self._loadSegy()
 
     def _loadSegy(self):

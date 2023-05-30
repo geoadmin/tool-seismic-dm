@@ -19,3 +19,16 @@ def plotWavelets(SeisDB):
         ax.set_ylabel('traces')
         ax.set_xlabel('samples')
         plt.show()
+
+def plot_Geom_src_rec(SeisDB):
+    fig, ax = plt.subplots()
+    sx = SeisDB.traces.headers.sx[SeisDB.traces.headers.sx != 0]
+    sy = SeisDB.traces.headers.sy[SeisDB.traces.headers.sy != 0]
+    gx = SeisDB.traces.headers.gx[SeisDB.traces.headers.gx != 0]
+    gy = SeisDB.traces.headers.gy[SeisDB.traces.headers.gy != 0]
+    cdpx = SeisDB.traces.headers.cdpx[SeisDB.traces.headers.cdpx != 0]
+    cdpy = SeisDB.traces.headers.cdpy[SeisDB.traces.headers.cdpy != 0]
+    ax.scatter(sx, sy, c='r')
+    ax.scatter(gx, gy, c='b')
+    ax.scatter(cdpx, cdpy, c='g')
+    plt.show()

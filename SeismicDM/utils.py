@@ -109,15 +109,70 @@ def findx(x_a, b):
     k = [i_b for i_b, x_b in enumerate(b) if x_b == x_a]
     return k
 
-def find(a,b):
+
+def find(xa, b):
     """
-    Get index where elements from serie a are found in serie b
+    Get index where elements xa are found in serie b
     """
     # k = [i_b for x_a in a for i_b, x_b in enumerate(b) if x_b == x_a]
-    a, b = list(a), list(b)
-    k = np.asarray([ b.index(xa) for xa in a])
-    return k
+    if isinstance(xa,(int, np.integer)):
+        ki = np.asarray([int(i_b) for i_b, x_b in enumerate(b) if x_b == xa])
+        if len(ki) == 1:
+            return int(ki[0])
+        else:
+            # print('No index match in {} for {}:'.format(b,ki))
+            pass
 
+def findValueinObj(bi, Obj, att):
+    obji = [getattr(Obj[i], att) for i in range(len(Obj))]
+    if bi in obji:
+        idi = obji.index(bi)
+    else:
+        idi = None
+    return idi
+
+def findValuesinObj(b, Obj, att):
+    idx = []
+    obji = [getattr(Obj[i], att) for i in range(len(Obj))]
+    for bi in b:
+        try:
+            idi = obji.index(bi)
+        except:
+            idi = None
+        idx = np.append(idx, idi)
+    return idx
+
+
+def findIdxCount(Obj, att, i, b): #, att, l, b):
+    """
+    Get value repetition of x_a in serie b
+    """
+    x_a = getattr(Obj[i], att)
+    cnt = [i_b for i_b, x_b in enumerate(b) if x_b == x_a]
+    a = get_attr_until_idx(Obj, att, np.arange(0,i))
+    occ = a.count(x_a)
+    return occ
+
+    # ki = [ki+1 for cnt in list_idx if cnt in list_idx]
+    # a = get_attr_idx(Obj, att, np.arange(0,i))
+    # cnt = [i_b for i_b, x_b in enumerate(b) if x_b == x_a]
+    # if cnt >1:
+    #     ki+= 1
+    # else
+    #     ki = 1
+    # print(cnt)
+    # return ki
+
+def get_attr_until_idx(Obj, att, idx):
+    a = [getattr(Obj[idx[i]], att) for i in idx]
+    return a
 
 def flatten(el):
     return [item for sublist in el for item in sublist]
+
+def azimuthdip(dx, dy, dz):
+    azimuth = 0
+    dip = 0
+    # TODO: function azimuth dip
+    print('add function azimuthdip')
+    return azimuth, dip

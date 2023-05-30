@@ -47,7 +47,7 @@ def loadSegy(Object):
                 for i in range(Object.fileheader.ntr):
                     df_h.loc[n] = np.asarray([int.from_bytes(f.read(ls[0]), byteorder=Object.endianness)
                                             for ls in TRACE_HEADER])
-                    df_d.loc[n * i] = np.array([unpack_ibm_4byte(f) for le in range(df_h['nstr'][n])])
+                    df_d.loc[n * i] = np.array([unpack_ibm_4byte(f) for le in range(df_h['ns'][n])])
             Object.traces.headers = df_h
             Object.traces.data = df_d.T  # invert dataframe to have row as traces
     except:

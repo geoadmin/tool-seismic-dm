@@ -3,7 +3,7 @@ from SeismicDM.SEGY import Seis
 from SeismicDM.pathsInit import (SeismicDM_PATH, geom_PATH, segy_PATH)
 from SeismicDM.userInputs import srv, existingDB
 from SeismicDM.utils import load_segy, load_geometry
-from SeismicDM.visualization import plotWavelets
+from SeismicDM.visualization import *
 import pandas as pd
 import os
 from SeismicDM.test import *
@@ -36,6 +36,8 @@ if __name__ == '__main__':
     # plotWavelets(SeisDB)
 
     # ASSIGN GEOM - can be called in class when finished
-    # SeisDB._navmergesps()
+    SeisDB._navmergesps()
+    # TODO: fix styp and do azimuthdip function
+    # plot_Geom_src_rec(SeisDB)
 
 

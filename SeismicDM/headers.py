@@ -102,78 +102,79 @@ BINARY_FILE_HEADER = [
     [8, 'una', False],  # Unassigned 2
 ]
 
+# TODO : modify trace header according to : https://wiki.seismic-unix.org/sudoc:su_data_format
 TRACE_HEADER = [
-    [4, 'seqntrli'],  # Trace sequence number within line
-    [4, 'seqntrfi'],  # Trace sequence number within segy file
-    [4, 'ffid'],  # Original field record number
-    [4, 'ntr'],  # Trace number within original field record
-    [4, 'sn'],  # Energy source point number
-    [4, 'en'],  # Ensemble number
-    [4, 'ntren'],  # Number trace within ensemble
+    [4, 'tracl'],  # Trace sequence number within line
+    [4, 'tracr'],  # Trace sequence number within segy file
+    [4, 'fldr'],  # Original field record number
+    [4, 'tracf'],  # Trace number within original field record (=tracf)
+    [4, 'ep'],  # Energy source point number
+    [4, 'cdp'],  # Ensemble number
+    [4, 'cdpt'],  # Number trace within ensemble
     [2, 'trid'],  # Trace identification code
-    [2, 'nvstk'],  # Number of vertically summed traces yielding this trace
-    [2, 'nhstk'],  # Number of horizontally summed traces yielding this trace
+    [2, 'nvs'],  # Number of vertically summed traces yielding this trace
+    [2, 'nhs'],  # Number of horizontally summed traces yielding this trace
     [2, 'duse'],  # Data use, 1=production 0=test
     [4, 'offset'],  # Distance from center source to center receiver group
-    [4, 'relev'],  # Elevation of receiver group
+    [4, 'gelev'],  # Elevation of receiver group
     [4, 'selev'],  # Surface elevation at source location
     [4, 'sdepth'],  # Source depth below surface
-    [4, 'rdel'],  # Seismic datum elevation at receiver group
+    [4, 'gdel'],  # Seismic datum elevation at receiver group
     [4, 'sdel'],  # Seismic datum elevation at source
     [4, 'swdep'],  # Water column height at source location
     [4, 'gwdep'],  # Water column height at receiver location
-    [2, 'zsc'],  # Scalar to be applied to elevations and depth prior writhing into tr header
-    [2, 'xysc'],  # Scalar to be applied to coordinates
+    [2, 'scalel'],  # Scalar to be applied to elevations and depth prior writhing into tr header
+    [2, 'scalco'],  # Scalar to be applied to coordinates
     [4, 'sx'],  # Source coordinate x, easting
     [4, 'sy'],  # Source coordinate y, northing
     [4, 'gx'],  # Group coordinate x, easting
     [4, 'gy'],  # Group coordinate y, northing
-    [2, 'unit'],  # Coordinate units
-    [2, 'wvel'],  # Weathering velocity (m/s or ft/s)
-    [2, 'swvel'],  # Subweathering velocity (m/s or ft/s)
+    [2, 'counit'],  # Coordinate units
+    [2, 'wevel'],  # Weathering velocity (m/s or ft/s)
+    [2, 'swevel'],  # Subweathering velocity (m/s or ft/s)
     [2, 'sut'],  # Uphole time at source in ms
     [2, 'gut'],  # Uphole time at group in ms
     [2, 'sstat'],  # Source static correction in ms
     [2, 'gstat'],  # Group static correction in ms
     [2, 'tstat'],  # Total static applied in ms
-    [2, 'lagta'],  # Lag time A in ms. Time between time break and end header.
-    [2, 'lagtb'],  # Lag time B in ms. Time between time break and initiation time of energy source.
-    [2, 'tdelay'],  # Delay recording time. Between initiation time source and time recording samples.
-    [2, 'tmutest'],  # Mute time. Start time in ms
-    [2, 'tmuteend'],  # Mute time. End time in ms
-    [2, 'nstr'],  # Number of sample of this trace
-    [2, 'sra'],  # Sample interval for this trace. in microseconds for t, Hz for f, m/ft for depth
-    [2, 'gaintyp'],  # Gain type
-    [2, 'gainc'],  # Instrument gain constant (dB)
-    [2, 'initgain'],  # Instrument early or initial gain (dB)
+    [2, 'laga'],  # Lag time A in ms. Time between time break and end header.
+    [2, 'lagb'],  # Lag time B in ms. Time between time break and initiation time of energy source.
+    [2, 'delrt'],  # Delay recording time. Between initiation time source and time recording samples.
+    [2, 'muts'],  # Mute time. Start time in ms
+    [2, 'mute'],  # Mute time. End time in ms
+    [2, 'ns'],  # Number of sample of this trace
+    [2, 'dt'],  # Sample interval for this trace. in microseconds for t, Hz for f, m/ft for depth
+    [2, 'gain'],  # Gain type
+    [2, 'igc'],  # Instrument gain constant (dB)
+    [2, 'igi'],  # Instrument early or initial gain (dB)
     [2, 'corr'],  # Correlated. 1=no, 0=yes
-    [2, 'swfst'],  # Sweep frequency at start (Hz)
-    [2, 'swfend'],  # Sweep frequency at end (Hz)
-    [2, 'swl'],  # Sweep length (ms)
-    [2, 'swtyp'],  # Sweep type code
-    [2, 'swtaplst'],  # Sweep trace taper length start (ms)
-    [2, 'swtaplend'],  # Sweep trace taper length end (ms)
-    [2, 'taptyp'],  # Taper type. 1=linear, 2=cos, 3=other
-    [2, 'falias'],  # Frequency alias filter (Hz)
-    [2, 'slalias'],  # Slope alias filter (dB/octave)
-    [2, 'fnotch'],  # Notch filter frequency (Hz)
-    [2, 'slnotch'],  # Notch filter slope (dB/octave)
-    [2, 'flc'],  # Low-cut frequency (Hz)
-    [2, 'fhc'],  # High-cut frequency (Hz)
-    [2, 'sllc'],  # Low-cut slope (dB/octave)
-    [2, 'slhc'],  # High-cut slope (dB/octave)
-    [2, 'yrs'],  # Year data recorded
-    [2, 'd'],  # Day of year
-    [2, 'h'],  # Hour of day
-    [2, 'm'],  # Minute of hour
-    [2, 's'],  # Second of minute
-    [2, 'tcode'],  # Time basis code
+    [2, 'sfs'],  # Sweep frequency at start (Hz)
+    [2, 'sfe'],  # Sweep frequency at end (Hz)
+    [2, 'slen'],  # Sweep length (ms)
+    [2, 'styp'],  # Sweep type code
+    [2, 'stas'],  # Sweep trace taper length start (ms)
+    [2, 'stae'],  # Sweep trace taper length end (ms)
+    [2, 'tatyp'],  # Taper type. 1=linear, 2=cos, 3=other
+    [2, 'afilf'],  # Frequency alias filter (Hz)
+    [2, 'afils'],  # Slope alias filter (dB/octave)
+    [2, 'nofilf'],  # Notch filter frequency (Hz)
+    [2, 'nofils'],  # Notch filter slope (dB/octave)
+    [2, 'lcf'],  # Low-cut frequency (Hz)
+    [2, 'hcf'],  # High-cut frequency (Hz)
+    [2, 'lcs'],  # Low-cut slope (dB/octave)
+    [2, 'hcs'],  # High-cut slope (dB/octave)
+    [2, 'year'],  # Year data recorded
+    [2, 'day'],  # Day of year
+    [2, 'hour'],  # Hour of day
+    [2, 'minute'],  # Minute of hour
+    [2, 'sec'],  # Second of minute
+    [2, 'timbas'],  # Time basis code
     [2, 'trwf'],  # Trace weighting factor
-    [2, 'georoll'],  # Geophone group number of roll switch position one
-    [2, 'gnfirst'],  # Geophone group number of trace number one within original field record
-    [2, 'gnlast'],  # Geophone group number of last trace within original field record
-    [2, 'gap'],  # Gap size, number of groups dropped
-    [2, 'otrav'],  # Over travel associated with taper. 1=down/behind, 2=up/ahead
+    [2, 'grnors'],  # Geophone group number of roll switch position one
+    [2, 'grnofr'],  # Geophone group number of trace number one within original field record
+    [2, 'grnlof'],  # Geophone group number of last trace within original field record
+    [2, 'gaps'],  # Gap size, number of groups dropped
+    [2, 'ofrav'],  # Over travel associated with taper. 1=down/behind, 2=up/ahead
     [4, 'cdpx'],  # X coordinate of ensemble (CDP) position of this trace
     [4, 'cdpy'],  # Y coordinate of ensemble (CDP) position of this trace
     [4, 'ninline'],  # In-line number for 3D
@@ -210,5 +211,8 @@ TRACE_HEADER_ADDITIONAL = [
     [4, 'dip'],  # Source-to-receiver dip (deg). Negative -> source above receiver
     [4, 'spskx'],  # Index of corresponding SPS-X record
     [4, 'spsks'],  # Index of corresponding SPS-S record
-    [4, 'spskr']  # Index of corresponding SPS-R record
+    [4, 'spskr'],  # Index of corresponding SPS-R record
+    # added for snavmergesps
+    [4, 'ssp1'],   # spare in snavmergesps
+    [4, 'ssp2'],   # spare in snavmergesps
 ]

@@ -7,7 +7,7 @@ srv=8403
 temp_nffid = 20
 
 # Database created. 0=no, 1=yes
-existingDB = 0
+existingDB = 1
 
 
 

@@ -39,12 +39,12 @@ def T2_loadFix_Relation(txt_file):
 class Si(object):
     def __init__(self):
         for sh in S_HEADER:
-            setattr(self, sh, None)
+            setattr(self, sh, 0)
 
 class Ri(object):
     def __init__(self):
         for rh in R_HEADER:
-            setattr(self, rh, None)
+            setattr(self, rh, 0)
 
 
 class Xi(object):
@@ -68,6 +68,7 @@ class SPS(object):
             self.R = [Ri() for i in range(self.n_fldr)]
             self.X = [Xi() for i in range(self.n_fldr)]
             self.BuildGeomDB(sg, rg, xg)
+
 
     def _load_geom(self, srctxt=None, rectxt=None, reltxt=None):
         SrcGeom = T0_loadFix_SrcGeom(srctxt)
@@ -110,7 +111,8 @@ class SPS(object):
 
             spare1 = [self.S[n].spare1 for n in range(len(ok))]
             ksrc = findx(SrcGeom['FLDR'][j], spare1)  # ksrc= Index des SPS-S Datensatz zum SPS-X Datensatz.
-            ksrc  =ksrc[0] if len(ksrc)==1 else print('ksrc not a scalar')
+            ksrc = ksrc[0] if len(ksrc) == 1 else None
+            # ksrc  = ksrc if np.isscalar(ksrc) else print('ksrc not a scalar')
 
             self.X[i].ffid =RelGeom['FLDR'][j]
             self.X[i].sline = self.srv
@@ -119,8 +121,10 @@ class SPS(object):
             self.X[i].time = j
 
             # Source index
-            spoint = RelGeom['SP']
-            self.X[i].sindex = len(findx(self.X[i].spoint, spoint))
+            Spoint = RelGeom['SP']
+            # self.X[i].sindex = len(findx(self.X[i].spoint, Spoint))
+            self.X[i].sindex = findIdxCount(self.X, 'spoint', i, Spoint) #ToDo:  verify index
+
 
             # # copy source related information to source rec
             self.S[ksrc].ts = self.X[i].time
@@ -152,6 +156,7 @@ class SPS(object):
                     self.X[i].krec[jr] = None
                 else:
                     krec = findx(self.X[i].rpoint[jr], RecGeom['REC'].values)
+                    # ksrc = ksrc if np.isscalar(ksrc) else None
                     krec = krec[0] if len(krec) == 1 else None
                     self.X[i].krec[jr] = krec
 
