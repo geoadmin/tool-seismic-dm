@@ -10,6 +10,8 @@ git clone https://github.com/geoadmin/tool-seismic-dm.git
 - numpy 
 - matplotlib
 - pandas
+- pyvista
+- rasterio
 - (obspy)
 
 ## Authors aud acknowledgment 

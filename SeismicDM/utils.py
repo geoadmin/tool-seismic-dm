@@ -3,34 +3,34 @@ import re
 import numpy as np
 import pandas as pd
 import struct
-from .pathsInit import (SeismicDM_PATH, geom_PATH, segy_PATH)
-from .userInputs import srv
+import xarray as xr
+import pyvista as pv
+# from .pathsInit import (SeismicDM_PATH, geom_PATH, segy_PATH)
+# from .userInputs import srv
 
 
 
 
 def load_geometry(geom_folder_path):
-    os.chdir(geom_PATH)  # Todo: find better way as chdir in function
     files = os.listdir(os.path.abspath(geom_folder_path))
     geom_files = []
     for file in files:
         geom_files.append(file)
     try:
-        return geom_files[0], geom_files[1], geom_files[2]
+        # as R comes bevor S in the alphabet, we invert the order to have sources first
+        return geom_files[1], geom_files[0], geom_files[2]
     except:
         print('Warning: {} is missing file(s)'.format(geom_folder_path))
         pass
 
 
 def load_segy(segy_folder_path):
-    os.chdir(segy_PATH)
     files = os.listdir(os.path.abspath(segy_folder_path))
     for file in files:
         return file
     else:
         print('Warning: {} is empty'.format(segy_folder_path))
         return 0
-
 
 def unpack_ibm_4byte(f):
     """
@@ -93,7 +93,7 @@ def get_bytefactor_from_format(format_data_sample):
 
 
 def txt2df(txt_file):
-    df = pd.read_csv(txt_file, comment='#', delimiter=" ", header=None)  # delimiter = "\t"
+    df = pd.read_csv(txt_file, comment='#', delimiter=" ", header=None, skipinitialspace=True)  # delimiter = "\t"
     return df
 
 
@@ -153,6 +153,15 @@ def findIdxCount(Obj, att, i, b): #, att, l, b):
     occ = a.count(x_a)
     return occ
 
+def findIdxCountUntilValue(value, b, idx):  # , att, l, b):
+    #TODO: verify if correct
+    """
+    Get value repetition of x_a in serie b
+    """
+    x_a = value
+    cnt = [i_b for i_b, x_b in enumerate(b[:idx]) if x_b == x_a]
+    return len(cnt)
+
     # ki = [ki+1 for cnt in list_idx if cnt in list_idx]
     # a = get_attr_idx(Obj, att, np.arange(0,i))
     # cnt = [i_b for i_b, x_b in enumerate(b) if x_b == x_a]
@@ -173,6 +182,25 @@ def flatten(el):
 def azimuthdip(dx, dy, dz):
     azimuth = 0
     dip = 0
+
     # TODO: function azimuth dip
-    print('add function azimuthdip')
     return azimuth, dip
+
+def read_raster(filename):
+    """
+    Helpful: https://github.com/pyvista/pyvista-support/issues/205
+    """
+    # Read in data
+    data = xr.open_rasterio(filename)
+    values = np.asarray(data)
+    nans = values == data.nodatavals
+    if np.any(nans):
+        values[nans] = np.nan
+
+    # Make mesh
+    xx, yy = np.meshgrid(data['x'], data['y'])
+    zz = values.reshape(xx.shape) # will make z comp
+    mesh = pv.StructuredGrid(xx,yy,zz)
+    mesh['data'] = values.ravel(order='F')
+    return mesh
+

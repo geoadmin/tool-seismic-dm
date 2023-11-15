@@ -1,8 +1,6 @@
-import pandas as pd
-import numpy as np
-from .userInputs import *
-from .headers import TRACE_HEADER_ADDITIONAL
-from .utils import *
+from SeismicDM.userInputs import *
+from SeismicDM.headers import TRACE_HEADER_ADDITIONAL
+from SeismicDM.utils import *
 
 def spsAssignGeomToTHR(s, KTR=0, gm=2):
     """
@@ -118,7 +116,6 @@ def spsAssignGeomToTHR(s, KTR=0, gm=2):
                     # Index of matching SPS-R-record
                     kr = int(KR[j])
                     if not (kr is None) and kr < temp_nffid: # Todo: remove condition when all
-                        print(kr)
 
                         # Effective receiver elevation
                         gelev = s.SPS.R[kr].elevation - s.SPS.R[kr].depth
@@ -143,10 +140,11 @@ def spsAssignGeomToTHR(s, KTR=0, gm=2):
 
                         ntr_assigned += 1
 
-                # Compute midpoint-related coordinates and offsets
+                        # Compute midpoint-related coordinates and offsets
+                # Todo: fix mean with gx, gy
                 cdpx = (s.traces.headers.sx[ktr] + s.traces.headers.gx[ktr]) / 2
                 # print(s.traces.headers.sx[ktri],s.traces.headers.gx[ktri],  cdpx)
-                cdpy = (s.traces.headers.sy[ktr] +s .traces.headers.gy[ktr]) / 2
+                cdpy = (s.traces.headers.sy[ktr] + s .traces.headers.gy[ktr]) / 2
                 offs = np.sqrt((s.traces.headers.sx[ktr] - s.traces.headers.gx[ktr])**2 +
                                (s.traces.headers.sy[ktr] - s.traces.headers.gy[ktr])**2)
 
@@ -179,13 +177,31 @@ def snavmergesps(S):
     # TODO : finish
 
     # ASSIGIN GEOMETRY TO SEISMIC TRACES
+
+    # List of FFID and TRIDs per trace
     ffid = S.traces.headers['fldr']
-    uffid = pd.unique(ffid)
-    nffid = len(uffid)
     trid = S.traces.headers['trid']
 
-    # Set default values for header variables to be modified
+    # Set of unique FFIDs ( not excluding void-FFIDs)
+    uffid = pd.unique(ffid)
+    nffid = len(uffid)
+
+    # Counter of production ffid in data not being assigned
+    # a geometry because therse is no matching ffid in SPS
+    nLack = 0
+
+    # Loop over ffids in seismic data
+    # for j in range(nffid):
+
+        # Assign shot-related SPS data to aux traces
+
+        # Assign full geometry to production traces
     S = spsAssignGeomToTHR(S)
+
+
+        # Count FFID not assigned a geometry
+    nlack += 1
+
 
 
 

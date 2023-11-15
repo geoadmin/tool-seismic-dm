@@ -1,10 +1,10 @@
 import numpy as np
 import pandas as pd
 
-from .headers import (S_HEADER, R_HEADER, X_HEADER)
-from .utils import *
-from .userInputs import temp_nffid
-from .pathsInit import (SeismicDM_PATH, geom_PATH, segy_PATH)
+from SeismicDM.headers import (S_HEADER, R_HEADER, X_HEADER)
+from SeismicDM.utils import *
+from SeismicDM.userInputs import temp_nffid, ok_r, ok_x, ok_s
+from SeismicDM.pathsInit import (SeismicDM_PATH, geom_PATH, segy_PATH)
 
 
 def T0_loadFix_SrcGeom(txt_file):
@@ -14,6 +14,7 @@ def T0_loadFix_SrcGeom(txt_file):
     df1.append(df2,ignore_index=True)
     headers = ['FLDR', 'EAS', 'NOR', 'ELEV']  # FLDR: source numbering
     df1.columns = headers
+    df1['ok']= ok_s
     return df1
 
 
@@ -24,6 +25,8 @@ def T1_loadFix_RecGeom(txt_file):
     df1.append(df2, ignore_index=True)
     headers = ['REC', 'EAS', 'NOR', 'ELEV']
     df1.columns = headers
+    df1['ok']= ok_r
+
     return df1
 
 
@@ -33,6 +36,8 @@ def T2_loadFix_Relation(txt_file):
     headers = ['FLDR', 'SP', 'SPxLat', 'SPxLin', 'RPal', 'RPbl', 'ChnG', 'NCh']
     # SP : source identifier , RPal : rec begin group1 RPbl: rec begin group2
     df.columns = headers
+    df['ok']= ok_x
+
     return df
 
 
@@ -123,7 +128,7 @@ class SPS(object):
             # Source index
             Spoint = RelGeom['SP']
             # self.X[i].sindex = len(findx(self.X[i].spoint, Spoint))
-            self.X[i].sindex = findIdxCount(self.X, 'spoint', i, Spoint) #ToDo:  verify index
+            self.X[i].sindex = findIdxCount(self.X, 'spoint', i, Spoint)
 
 
             # # copy source related information to source rec
@@ -177,7 +182,6 @@ class SPS(object):
 
         # Build SPS
         # Decimate SPS/S SPS/R to stations member in SPS/X
-        # TODO: add
         ksrc = [self.X[i].ksrc for i in range(len(ok))]
         k = np.unique(ksrc)
 
