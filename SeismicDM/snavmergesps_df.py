@@ -8,7 +8,7 @@ def spsAssignGeomToTHR_df(s, KTR=0, gm=2):
     information from a SPS database to seismic trace headers.
     :param s:
     :param ktr: Indices of traces to which geometry shall be assigned.
-                This trace-subset must must have the same FFID !
+                This trace-subset must have the same FFID !
     :param gm: Operation mode. 0: does not assign geometry, 1: assign only source-point-related geometry
                2: assign source and receiver-related geometry
     :return:
@@ -195,11 +195,12 @@ def snavmergesps_df(S):
     nLack = 0
 
     # Loop over ffids in seismic data
-    for j in range(len(ffid)):
-        print('create spsAssignGeomToTHR')
-    #     # Assign shot-related SPS data to aux traces
-    #
-    #     # Assign full geometry to production traces
+    print('create spsAssignGeomToTHR')
+
+    # for j in range(len(ffid)):
+        # Assign shot-related SPS data to aux traces
+
+        # Assign full geometry to production traces
     # S = spsAssignGeomToTHR_df(S)
     #
     #

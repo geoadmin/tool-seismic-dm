@@ -2,6 +2,10 @@ from .loadSegy import *
 from .snavmergesps_df import *
 from obspy.io.segy.segy import _read_segy
 from .headers import STH_keys, BINARY_FILE_HEADER_FORMAT, TRACE_HEADER_FORMAT
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+
+
 
 class ImportError(Exception):
     pass
@@ -17,11 +21,25 @@ class Traceheader(object):
     def __init__(self):
         self.ntr = None
 
-
 class Traces(object):
     def __init__(self):
         self.headers = pd.DataFrame()
         self.data = pd.DataFrame()
+
+
+class TRH(object): #TODO: do we need object
+    def __init__(self):
+        self.tr = []
+    def Add(self, tra):
+        self.tr.append(tra)
+
+
+class tr(object): #TODO: do we need object
+    def __init__(self, header, data):
+        # for rh in TRACE_HEADER:
+        #     setattr(self, rh, 0)
+        self.header = header
+        self.data = data
 
 
 class Seis(object):
@@ -39,13 +57,14 @@ class Seis(object):
             self.line = line
             self.sps = SPS
             self.nffid = self.sps.n_fldr
-            print('nffid: {}'.format(self.nffid)) #--------------------------- OUTPUT
             self.file = file
             self.fileheader = Fileheader()
-            # self.TRH = pd.DataFrame()
             self.traces = Traces()
+
             self._loadSegy()
-            self._navmergesps()
+            # self._reshape_thr()
+
+            # self._navmergesps()
 
     def _loadSegy(self):
         loadSegy(self)
@@ -53,6 +72,18 @@ class Seis(object):
 
     def _saveSeisDB(self,name = 'tempDB', path=None):
         pd.to_pickle(self, path+'/temp/' + name + '.pkl')
+
+    def _reshape_thr(self):
+        T = TRH()
+        [[t.header, t.data] for t in T.tr]
+        d = self.traces.data
+        for i in range(d.shape[0] - 1):
+            d_init = self.traces.data.loc[i, :]
+            d = np.concatenate(d_init, axis=0)
+            d = np.reshape(d, (self.fileheader.nsam, self.fileheader.ntr))
+            h = self.traces.headers.loc[i, :]
+            T.Add(tr(h, d))
+        self.THR = T
 
 
     def _navmergesps(self):
@@ -90,13 +121,15 @@ class Segy_obspy(object):
         self.data = pd.DataFrame(d).T
         self.sra = self.trace_header['sample_interval_in_ms_for_this_trace']
 
-    def _visualize_segy_obspy_data(self, cut = None):
-        import matplotlib.pyplot as plt
+    def _visualize_segy_obspy_data(self, cut_up = 0, cut_low = None, invert_x = 0):
         fig, (ax) = plt.subplots()
         data = self.data
-        if cut is not None:
-            data = self.data.iloc[0:cut,:]
-        ax.imshow(data, cmap='seismic', aspect='auto')  # good in sample
+        if cut_low is not None:
+            # data = self.data.iloc[0:cut,:]
+            data = self.data.iloc[cut_up:cut_low,:]
+        ax.imshow(data, norm=mpl.colors.CenteredNorm(), cmap='seismic', aspect='auto')  # good in sample
+        if invert_x == 1:
+            plt.gca().invert_xaxis()
         # extent = [0, len(self.data), 0, self.data * self.sra]
         # ax.imshow(self.data, cmap='seismic')  # good in sample
         ax.set_xlabel('traces')
@@ -105,7 +138,6 @@ class Segy_obspy(object):
         plt.show()
 
     def _visualize_segy_obspy_geom(self):
-        import matplotlib.pyplot as plt
         r_coordinates = self.trace_header[['group_coordinate_x', 'group_coordinate_y']].values
         s_coordinates = self.trace_header[['source_coordinate_x', 'source_coordinate_y']].values
         rx, ry = r_coordinates[:, 0], r_coordinates[:, 1]

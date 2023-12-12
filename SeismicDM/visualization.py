@@ -49,6 +49,18 @@ def plot_aquisition_geom(SeisDB):
     plt.legend()
     plt.show()
 
+def plotFFID(SeisDB, n):
+    print('Plot ffid')
+    fig, (ax) = plt.subplots()
+    # TODO: transform sample in time - import sra
+    data = SeisDB.THR.tr[n].data
+    ax.imshow(data.T, cmap='seismic')  # good in sample
+    ax.set_xlabel('traces')
+    ax.set_ylabel('samples')
+    #     ax.plot(data[idx_tr]/max(data[idx_tr])) # scaling and shift
+    plt.show()
+
+
 def plotImshow(SeisDB):
     print('Plot imshow')
     fig, (ax) = plt.subplots()

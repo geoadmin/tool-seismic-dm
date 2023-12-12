@@ -119,8 +119,11 @@ def find(xa, b):
         ki = np.asarray([int(i_b) for i_b, x_b in enumerate(b) if x_b == xa])
         if len(ki) == 1:
             return int(ki[0])
+        elif len(ki)>1 :
+            # print('index non unique')
+            return int(ki[0])
         else:
-            # print('No index match in {} for {}:'.format(b,ki))
+            print('No index match in {} for {}:'.format(b,ki))
             pass
 
 def findValueinObj(bi, Obj, att):
@@ -203,4 +206,14 @@ def read_raster(filename):
     mesh = pv.StructuredGrid(xx,yy,zz)
     mesh['data'] = values.ravel(order='F')
     return mesh
+
+def find_files_segy(Dir):
+    for root, dirs, files in os.walk(Dir,topdown=True):
+        for file in files:
+            if file.endswith(".segy") or file.endswith(".sgy"):
+                # print(os.path.join(root, file))
+                # surveys_lines = root.split("/")[-1]
+                print(file)
+
+    # print(os.walk(Dir).next()[1])
 
