@@ -3,7 +3,7 @@ import re
 import numpy as np
 import pandas as pd
 import struct
-from SeismicDM.SPS_df import *
+from SeismicDM.SPS import *
 import matplotlib.pyplot as plt
 
 def OCR_check(line, path, fix,import_corrected_files, method=2):

@@ -1,5 +1,5 @@
 from .loadSegy import *
-from .snavmergesps_df import *
+from .snavmergesps import *
 from obspy.io.segy.segy import _read_segy
 from .headers import STH_keys, BINARY_FILE_HEADER_FORMAT, TRACE_HEADER_FORMAT
 import matplotlib.pyplot as plt

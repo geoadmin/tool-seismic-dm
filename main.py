@@ -1,5 +1,5 @@
 from SeismicDM.DB import Seis
-from SeismicDM.SPS_df import *
+from SeismicDM.SPS import *
 from SeismicDM.visualization import *
 
 def createDB():

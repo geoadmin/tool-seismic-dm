@@ -2,7 +2,7 @@ from .userInputs import *
 from .headers import TRACE_HEADER_ADDITIONAL
 from .utils import *
 
-def spsAssignGeomToTHR_df(s, KTR=0, gm=2):
+def spsAssignGeomToTHR(s, KTR=0, gm=2):
     """
     transcribes source- and receiver-related
     information from a SPS database to seismic trace headers.

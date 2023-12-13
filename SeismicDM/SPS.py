@@ -166,6 +166,7 @@ class SPS_df(object):
             # check for unique ffid
             nbr_ffid = findx(int(self.X['ffid'][j]), self.X['ffid'])
             if len(nbr_ffid)>1:
+                # raise ValueError('Non-unique FFID')
                 print('----- Non-unique FFID. FFID: {}'.format(self.X['ffid'][j]))
 
 
@@ -180,7 +181,7 @@ class SPS_df(object):
             ChanA = np.arange(chanFirst,chanLast, chanIncr).astype(int) # chanFirst: in python, last = last-1
             # layout B: rec stations after SP
             chanFirst = RelGeom['ChnG'][j]
-            chanLast = self.X['nChan'][j]
+            chanLast = self.X['nChan'][j]+1 # chanlast: in python, last = last-1
             ChanB = np.arange(chanFirst,chanLast, chanIncr).astype(int)
 
             # assign channel numbers
@@ -192,7 +193,7 @@ class SPS_df(object):
             recA = np.arange(recFirst, recLast, chanIncr)
             # receiver point identification, layout A
             recFirst = RelGeom['RPbl'][j]
-            recLast = RelGeom['RPbl'][j] + len(ChanB)
+            recLast = RelGeom['RPbl'][j] + len(ChanB) #TODO: verify !! angepasst
             recB = np.arange(recFirst, recLast, chanIncr)
             # assign receiver point identification
             self.X.at[i, 'rpoint'] = np.concatenate((recA, recB), axis=0) # [recA, recB]
@@ -215,59 +216,68 @@ class SPS_df(object):
 
             # check for unique records
             #TODO: -------------------------
+            # if not (isempty(find(([S.point] + i * [S.index]) == (s.point + i * s.index)))) # MATLAB : what is i??
 
-            # spare1 = [self.S['spare1'][n] for n in range(len(ok))]
-            # ksrc = findx(int(SrcGeom['FLDR'][j]), spare1)  #TODO: à l'envers??  # ksrc= Index des SPS-S Datensatz zum SPS-X Datensatz.
-            # ksrc = ksrc[0] if len(ksrc) == 1 else None
-            #
-            # self.X.at[i, 'ksrc'] = ksrc
-            # self.X.at[i, 'time'] = j
-            #
-            #
-            # # copy source related information to source rec
-            # self.S.at[ksrc, 'ts'] = self.X.loc[i, 'time']
-            # self.S.at[ksrc, 'index'] = self.X.loc[i, 'sindex']
-            # self.S.at[ksrc, 'point'] = self.X.loc[i, 'spoint']
-            # ## seems ok until here ------------------------------------------------
-            #
-            #
-            #
-            # #
-            #
-            # # TODO : OLD X.rpoint struct
-            # # self.X.at[i, 'rpoint'] = np.asarray([RelGeom['RPal'][j] + np.linspace(0,59,60),
-            # #                              RelGeom['RPbl'][j] + np.linspace(0,59,60)]).flatten()
-            #
-            # # aux information (dummy)
-            # self.X.at[i, 'instr'] = np.ones((1, nch_j))
-            # self.X.at[i, 'spar1'] = np.zeros((1, nch_j))
-            # self.X.at[i, 'spar2'] = np.zeros((1, nch_j))
-            #
-            # # find receiver indices
-            # self.X.at[i, 'krec'] = np.zeros(self.X.at[i,'nChan'])
-            # for jr in range(int(self.X.at[i,'nChan'])):
-            #     if self.X.at[i, 'rpoint'][jr] < np.min(RecGeom['REC']) or self.X.at[i, 'rpoint'][jr] > np.max(RecGeom['REC']):
-            #         self.X.at[i, 'krec'][jr] = None
-            #     else:
-            #         # krec = findx(int(self.X.at[i, 'rpoint'][jr]), RecGeom['REC'].values)
-            #         krec = findx(int(self.X.at[i, 'rpoint'][jr]), self.R.point)
-            #         krec = krec[0] if len(krec) == 1 else None
-            #         self.X.at[i, 'krec'][jr] = krec
+            # check for unique records
+            # if ismember(r.point, [R.point])  # matlab
+            if self.R['point'][j] in self.R['point'][:j]:
+                print('Non-unique R-point')
 
-            # drop void receiver stations
-            # k0 = np.where(np.isnan(self.X.at[i, 'krec']))
-            #
-            # self.X.at[i, 'CHAN'] = np.delete(self.X.at[i, 'CHAN'], k0)
-            # self.X.at[i, 'rline'] = np.delete(self.X.at[i, 'rline'], k0)
-            # self.X.at[i, 'rpoint'] = np.delete( self.X.at[i, 'rpoint'] , k0)
-            # self.X.at[i, 'rindex'] = np.delete(self.X.at[i, 'rindex'], k0)
-            # self.X.at[i, 'instr'] = np.delete(self.X.at[i, 'instr'], k0)
-            # self.X.at[i, 'krec'] = np.delete(self.X.at[i, 'krec'], k0)
-            # self.X.at[i, 'spar1'] = np.delete(self.X.at[i, 'spar1'], k0)
-            # self.X.at[i, 'spar2'] = np.delete(self.X.at[i, 'spar2'], k0)
-            #
-            # # New n channel after drop
-            # self.X.at[i, 'nChan'] = len(self.X.at[i, 'CHAN'])
+            self.nsrc = len(self.S)
+            self.nrec = len(self.R)
+            self.nx = len(self.X)
+
+        # COMPILE SPS DB
+        # complete relation record #TODO: why two loops and not only one in matlab? if lenth X varies?
+        for j in range(self.nx):
+
+            # source record index
+            # sps.X(j).ksrc = spsfindsrc(sps, sps.X(j).sline, sps.X(j).spoint, sps.X(j).sindex);
+
+            self.X.at[j, 'ksrc'] = spsfindsrc(self, self.X['sline'][j], self.X['spoint'][j], self.X['sindex'][j])
+            if not self.X.at[j, 'ksrc'] and self.X.at[j, 'ksrc'] != 0:
+                print('No matching source point')
+
+            # receiver record indices
+            # non-existing recs are assigned KREC = 0
+            # self.X.at[j,'krec'] = np.zeros((1, self.X['nChan'][j]))
+            self.X.at[j,'krec'] = np.zeros(self.X['nChan'][j])
+
+            for jr in range(self.X['nChan'][j]):
+                # a = self.X['rindex'][j][0, jr]
+                k = spsfindrec(self, self.X['rline'][j][0, jr], self.X['rpoint'][j][jr], self.X['rindex'][j][0, jr])
+                self.X.at[j,'krec'][jr] = k
+
+            # Drop X records without R equivalent
+            # k0 = findx(0, self.X['krec'][j])
+            # k0 = np.where(np.isnan(self.X['krec'][j])) # find where nan are!
+            k0 = np.where(np.isnan(self.X.at[j, 'krec'])) # find where nan instead of 0
+            k0 = k0[0]
+            # print('{} Rec of d {} stations dropped from X{}'.format(len(k0)-1,self.X['nChan'][j], j))
+
+            # aux information (dummy)
+            self.X.at[i, 'instr'] = np.ones((1, self.X['nChan'][j]))
+            self.X.at[i, 'spar1'] = np.zeros((1, self.X['nChan'][j]))
+            self.X.at[i, 'spar2'] = np.zeros((1,self.X['nChan'][j]))
+
+            if len(k0) > 0 :
+                # drop void receiver stations
+                self.X.at[j, 'CHAN'] = np.delete(self.X.at[j, 'CHAN'], k0)
+                self.X.at[j, 'rline'] = np.delete(self.X.at[j, 'rline'], k0)
+                self.X.at[j, 'rpoint'] = np.delete( self.X.at[j, 'rpoint'], k0)
+                self.X.at[j, 'rindex'] = np.delete(self.X.at[j, 'rindex'], k0)
+                # self.X.at[j, 'instr'] = np.delete(self.X.at[j, 'instr'], k0) # todo: fix dimensions
+                self.X.at[j, 'krec'] = np.delete(self.X.at[j, 'krec'], k0)
+                # self.X.at[j, 'spar1'] = np.delete(self.X.at[j, 'spar1'], k0)
+                # self.X.at[j, 'spar2'] = np.delete(self.X.at[j, 'spar2'], k0)
+
+            # New n channel after drop
+            self.X.at[j, 'nChan'] = len(self.X.at[j, 'CHAN'])
+
+            #TODO: spsreport
+
+
+
 
         # Build SPS
         # Decimate SPS/S SPS/R to stations member in SPS/X
@@ -279,6 +289,4 @@ class SPS_df(object):
         # self.R = [ self.R[ki] for ki in k]
         # self.X = [ self.X[ki] for ki in k]
 
-        self.nsrc = len(self.S)
-        self.nrec = len(self.R)
-        self.nx = len(self.X)
+
