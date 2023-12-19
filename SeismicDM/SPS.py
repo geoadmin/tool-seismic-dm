@@ -93,6 +93,10 @@ class SPS_df(object):
         self.n_fldr = len(RelGeom['FLDR'])
         return SrcGeom, RecGeom, RelGeom
 
+    def _saveSPS(self, name='tempSPS', path=None):
+        pd.to_pickle(self, path + '/temp/' + name + '.pkl')
+
+
     def BuildGeomDB(self, SrcGeom, RecGeom, RelGeom):
         """
         Create SPS structure from geometry inputs

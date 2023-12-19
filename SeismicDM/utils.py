@@ -5,6 +5,7 @@ import pandas as pd
 import struct
 import xarray as xr
 import pyvista as pv
+
 # from .pathsInit import (SeismicDM_PATH, geom_PATH, segy_PATH)
 # from .userInputs import srv
 
@@ -137,6 +138,9 @@ def intersect_mtlb(a, b):
     c = aux[:-1][aux[1:] == aux[:-1]]
     return c
 
+def ismember(A, B):
+# https://stackoverflow.com/questions/25923027/matlab-ismember-function-in-python
+  return [1 if (i == B) else 0 for i in A]
 
 
 def spsfindsrc(sps, line, point, sindex):
@@ -239,6 +243,30 @@ def spsfindrec(sps, line, point, rindex):
     # Search relation records -- OPTIONAL #TODO: not done yet
     return kr
 
+# def create_shp(SeisDB, path4saving, name_shp_saved):
+#     # import arcpy
+#     # Define spatial reference. Get the spatial reference CH1903+ LV95 through WKID
+#     sr = arcpy.SpatialReference(2056)
+#
+#     r_coordinates = SeisDB.sps.R[['easting', 'northing']].values
+#     s_coordinates = SeisDB.sps.S[['easting', 'northing']].values
+#
+#     # r_coordinates as <class 'list'>
+#     r_coordinates = r_coordinates.tolist()
+#     s_coordinates = s_coordinates.tolist()
+#
+#     features_receivers = []
+#     features_receivers.append(
+#         arcpy.Polyline(
+#             arcpy.Array([arcpy.Point(*coords) for coords in r_coordinates]), sr))
+#     arcpy.CopyFeatures_management(features_receivers, path4saving + 'receivers_' + name_shp_saved)
+#     features_sources = []
+#     features_sources.append(
+#         arcpy.Multipoint(
+#             arcpy.Array([arcpy.Point(*coords) for coords in s_coordinates]), sr))
+#     arcpy.CopyFeatures_management(features_sources, path4saving + 'sources_' + name_shp_saved)
+#
+#     return 0
 
 def findValueinObj(bi, Obj, att):
     obji = [getattr(Obj[i], att) for i in range(len(Obj))]

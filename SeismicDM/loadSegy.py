@@ -42,25 +42,17 @@ def loadSegy(Object):
             f.seek(3600)  # jump to end of trace file header
             df_h = pd.DataFrame(columns=[ls[1] for ls in TRACE_HEADER])
             df_d = pd.DataFrame(columns=[i for i in range(Object.fileheader.ntr)])
-            for n in range(3): # Todo: LEAG ISSUE with nffid 110 : nffid stops at 108 Object.nffid
+            ntr = 0
+            # for n in range(3):
+            for n in range(Object.nffid): # Todo: verify all traces imported
                 for i in range(Object.fileheader.ntr):
+                    ntr += 1
                     df_h.loc[n] = np.asarray([int.from_bytes(f.read(ls[0]), byteorder=Object.endianness)
                                             for ls in TRACE_HEADER])
                     df_d.loc[n,i] = np.array([unpack_ibm_4byte(f) for le in range(df_h['ns'][n])])
             Object.traces.headers = df_h
             Object.traces.data = df_d
-
-            # df_d .T invert dataframe to have row as traces
-
-            # for n in range(10): # Todo: LEAG ISSUE with nffid 110 : nffid stops at 108
-            #     # d = np.zeros((Object.fileheader.nasm, Object.fileheader.ntr))
-            #     for i in range(Object.fileheader.ntr):
-            #         header = np.asarray([int.from_bytes(f.read(ls[0]), byteorder=Object.endianness)
-            #                                 for ls in TRACE_HEADER])
-            #         # d[n,i] = np.array([unpack_ibm_4byte(f) for le in range(df_h['ns'][n])])
-            #     Object.TRH.traces[n].headers = header
-            #     # Object.TRH.traces[n].data = df_d.T
-
+        Object.ntr = ntr
     except:
         raise ImportError('Traces can not be read')
 

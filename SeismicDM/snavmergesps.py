@@ -170,25 +170,107 @@ def spsAssignGeomToTHR(s, KTR=0, gm=2):
     return s
 
 
-def snavmergesps_df(S):
+def snavmergesps(S, vFFID = None, verbose = None):
     """
+    @author: Andreas Hoelker
     Assign a survey acquisition geometry provided by a SPS database to
     a seismic shot records provided as a seismic data structure (s)
+
+    :param S: a seismic data structure. Required trace headers are:
+              FLDR:     Shot identification, corresponding to FFID in SPS data
+              TraceF:   Channel numbers, corresponding to channels in SPS data
+              TRID:     Trace identification code, where:
+                        1 indicates production seismic traces
+                        >1 auxillary traces
+                        0 void traces.
+              SPS:      SPS database, with shot, receiver station records and relation records
+
+    :runtime parameters:
+              verbose=true  Switch: Progress/data reporting on/off
+              vFFID:    Nummeric array holding a listing of void FFIDs,
+                        i.e. FFIDs ocrruing in S but not to be assigned geometry
+                        Typically these are the FFIDS of the daily tests
+              xysc=10   Scaling factor applicable to X/Y coordinates prior to writing them into trace headers.
+                        Coordinates will be rounded to integers after scaling. Default is 10.
+              zsc=10    Scaling factor applicable to elevation and depth prior to writing them into trace headers.
+                        Elevation will be rounded to integers after scaling. Default is 10.
+              tsc=1     Scaling factor applicable to times (uphole, static shift) prior to writing them into trace head.
+                        Times will be rounded to integers after scaling. Default is 1.
+              lsc = *   Factor to scale line numbers when combining with point station numbers: line*LSC+station.
+                        * the default is auto-determined
+              ttol=2    Tolerance [s] when comparing shot time stamps from the SPS data and seismic data.
+              check=true    Switch: Check consistency of SPS database. true= check, false= skip test
+
+    :return: S= Seismic data structure, copy of input S, acquisition geometry added to headers
+
     """
     # TODO : finish
-    print('snavmergesps_df')
-    # ASSIGIN GEOMETRY TO SEISMIC TRACES
+    print('snavmergesps')
+
+    # ================================================
+    # RUNTIME PARAMETERS
+    #todo: implement
+
+    # ================================================
+    # COUNT FFID & TRACES
+    #todo: implement
 
     # List of FFID and TRIDs per trace
-    ffid = S.traces.headers['fldr']
-    trid = S.traces.headers['trid']
+    FFID = S.traces.headers['fldr']
+    TRID = S.traces.headers['trid']
     #     FFID = S.traces.fldr[j]
     #     TRID = S.traces.trid[j]
     # exlude uniques : UFFID = pd.unique(FFID) + exclude
 
     # Set of unique FFIDs ( not excluding void-FFIDs)
-    uffid = pd.unique(ffid)
-    nffid = len(uffid)
+    uFFID = pd.unique(FFID)
+
+    # FFID counts
+    nFFID = len(uFFID)
+    if vFFID:
+        nFFIDvoid = len(vFFID)
+        nFFIDprod = nFFID - nFFIDvoid
+
+    #Trace counts
+    ntrTotal = len(FFID)
+    k1 = np.where(ismember(FFID,vFFID)==0)
+    k2 = TRID.index[TRID ==1] #k2 = sum(TRID == 1)
+    k3 = TRID.index[TRID >1]
+    ntrVoid = ntrTotal - len(k1)
+    ntrProd = len(intersect_mtlb(k1,k2))
+    ntrAux = len(intersect_mtlb(k1,k3))
+
+    # Report
+    if verbose:
+        print('\n')
+        print('Number of FFIDs: {}'.format(nFFID))
+        print('Number of production FFIDs: {}'.format(nFFIDprod))
+        print('Number of void FFIDs: {}'.format(nFFIDvoid))
+        print('\n')
+        print('Number of traces: {}'.format(ntrTotal))
+        print('Number of seis. prod. data: {}'.format(ntrProd))
+        print('Number of ass. void-FFIDs: {}'.format(ntrVoid))
+        print('\n')
+
+
+    # ================================================
+    # NUMBER OF STATIONS, TRACES, etc
+    nS = S.sps.S.shape[0]
+    nR = S.sps.R.shape[0]
+    nX = S.sps.X.shape[0]
+
+    # Number of traces in SPS relation records
+    ntrSPS = sum(S.sps.X['nChan'])
+
+    # Number of traces in the seismic data
+    # ntrSeis = sum(S.ntr)
+    # print(ntrSeis)
+
+    #
+    # ================================================
+    # ASSIGIN GEOMETRY TO SEISMIC TRACES
+
+
 
     # Counter of production ffid in data not being assigned
     # a geometry because there is no matching ffid in SPS

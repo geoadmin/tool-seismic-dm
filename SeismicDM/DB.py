@@ -63,15 +63,15 @@ class Seis(object):
 
             self._loadSegy()
             # self._reshape_thr()
-
-            # self._navmergesps()
+            # self._navmergesps(verbose=True)
 
     def _loadSegy(self):
         loadSegy(self)
 
 
-    def _saveSeisDB(self,name = 'tempDB', path=None):
+    def _saveSeisDB(self,name = 'tempDB', path= None):
         pd.to_pickle(self, path+'/temp/' + name + '.pkl')
+
 
     def _reshape_thr(self):
         T = TRH()
@@ -88,7 +88,7 @@ class Seis(object):
 
     def _navmergesps(self):
         # snavmergesps(self)
-        snavmergesps_df(self)
+        snavmergesps(self)
 
 class Segy_obspy(object):
     def __init__(self,file=None):
